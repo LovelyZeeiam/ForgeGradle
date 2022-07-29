@@ -20,6 +20,7 @@
 
 package net.minecraftforge.gradle.mcp.function;
 
+import net.minecraftforge.gradle.common.util.DownloadUtils;
 import net.minecraftforge.gradle.common.util.HashFunction;
 import net.minecraftforge.gradle.common.util.Utils;
 import net.minecraftforge.gradle.mcp.util.MCPEnvironment;
@@ -46,9 +47,8 @@ class DownloadFileFunction implements MCPFunction {
 
     @Override
     public File execute(MCPEnvironment environment) throws Exception {
-        File output = (File)environment.getArguments().computeIfAbsent("output", k -> environment.getFile(outputGetter.apply(environment)));
+        File output = (File)environment.getArguments().computeIfAbsent("output", key -> environment.getFile(outputGetter.apply(environment)));
         File download = !output.exists() ? output : environment.getFile(output.getAbsolutePath() + ".new");
-
         Utils.delete(download); // This file should never exist, but abrupt termination of the process may leave it behind
 
         DownloadInfo info = downloadGetter.apply(environment);

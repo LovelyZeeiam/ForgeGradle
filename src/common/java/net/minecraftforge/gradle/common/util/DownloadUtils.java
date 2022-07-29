@@ -20,7 +20,9 @@
 
 package net.minecraftforge.gradle.common.util;
 
+import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import org.apache.commons.io.IOUtils;
+import org.apache.tools.ant.taskdefs.condition.Http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -35,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -93,6 +96,7 @@ public class DownloadUtils {
         }
         return false;
     }
+
 
     public static boolean downloadFile(URL url, File output, boolean deleteOn404) {
         return downloadFile(url, output, null, deleteOn404);
@@ -254,4 +258,5 @@ public class DownloadUtils {
         }
         return con;
     }
+
 }
