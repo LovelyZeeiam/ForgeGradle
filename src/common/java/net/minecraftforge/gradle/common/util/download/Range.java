@@ -22,4 +22,12 @@ class Range {
 		return to;
 	}
 
+	@Override
+	public String toString() {
+		return "Range{" +
+				"from=" + from +
+				", to=" + to +
+				'}';
+	}
+
 }

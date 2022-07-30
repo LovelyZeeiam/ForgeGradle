@@ -45,7 +45,7 @@ abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
 
 	@Override
 	protected void runTask(RangeConnection rangeCon) throws Exception {
-//		long downloadSize = rangeCon.getTo() - rangeCon.getFrom() + 1;
+		long downloadSize = rangeCon.getTo() - rangeCon.getFrom() + 1;
 		long byteCount = 0;
 
 		InputStream in = null;
@@ -62,12 +62,22 @@ abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
 
 			int read = 0;
 			while (read != -1) {
-				read = in.read(ioBuffer);
+				long remaining = downloadSize - byteCount;
+
+				// To ensure read count is an "integer"
+				// And also make sure that the initial connection won't read more
+				int thisTimeReadCount = (int) Math.min(ioBuffer.length, Math.min(remaining, Integer.MAX_VALUE));
+				if (thisTimeReadCount <= 0)
+					break;
+
+				read = in.read(ioBuffer, 0, thisTimeReadCount);
+
 				if (read > 0) {
 					out.write(ioBuffer, 0, read);
 					byteCount += read;
 				}
 //				System.out.println(read + ", " + byteCount + ", " + downloadSize);
+
 			}
 
 			this.processDownloadSuccess(rangeCon, file);
@@ -93,6 +103,20 @@ abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
 		return create(url, output, headers, 16384, executor);
 	}
 
+	/**
+	 * Create a <code>DownloadInstance</code> instance that is ready to run. It will check whether the
+	 * link support <code>Range</code> parameter, get the length of content and make relative decisions,
+	 * which is called initializing.
+	 *
+	 * @param url       The downloading link
+	 * @param output    The output file
+	 * @param headers   The headers that is necessary to make the connection
+	 * @param chunkSize The chunk size of multithreaded downloading. When the value is not bigger than
+	 *                  zero, the method won't consider the multithreaded downloading but returns to
+	 *                  the RangeDownloadInstance.
+	 * @param executor  The executor that runs multithreaded downloading task
+	 * @throws IOException throw when an exception on initializing is thrown
+	 */
 	public static DownloadInstance create(URL url, File output, Map<String, String> headers, long chunkSize, ExecutorService executor) throws IOException {
 		String proto = url.getProtocol().toLowerCase();
 		URLConnection con = createConnection(url, headers);
@@ -101,7 +125,7 @@ abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
 		if ("http".equals(proto) || "https".equals(proto)) {
 			// Open the connection to check whether Range is supported
 			HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
-			httpCon.setRequestProperty("Range", "bytes=1-");
+			httpCon.setRequestProperty("Range", "bytes=0-");
 			int responseCode = httpCon.getResponseCode();
 
 			switch (responseCode) {
@@ -123,6 +147,7 @@ abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
 		long fileSize = con.getContentLengthLong();
 
 		DownloadInstance instance;
+		// To support some occasions when a negative file size is sent back. Often this will happen when trying to access a remote website.
 		if (fileSize > 0) {
 			instance = supportRange ?
 					(chunkSize > 0 ? new MultiThreadedDownloadInstance(url, output, headers, chunkSize, executor) : new RangeDownloadInstance(url, output, headers, executor))

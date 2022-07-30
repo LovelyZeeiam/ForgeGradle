@@ -9,24 +9,24 @@ import java.util.concurrent.ExecutorService;
 
 class MultiThreadedDownloadInstance extends RangeDownloadInstance {
 
-	private final long chunKSize;
+	private final long chunkSize;
 
 	MultiThreadedDownloadInstance(URL url, File output, @Nullable Map<String, String> headers, long chunkSize, ExecutorService executor) {
 		super(url, output, headers, executor);
-		this.chunKSize = chunkSize;
+		this.chunkSize = chunkSize;
 	}
 
 	@Override
 	protected void init(URLConnection initialConnection) {
-		super.init(initialConnection);
+		long pointer = chunkSize, pointerEnd = chunkSize * 2 - 1;
+		this.submit(new RangeConnection(0, pointer - 1, initialConnection));
 
-		long pointer = chunKSize, pointerEnd = chunKSize * 2 - 1;
 		while (pointer <= fileSize) {
 			pointerEnd = Math.min(pointerEnd, this.fileSize);
 			this.submitDownloadTask(new Range(pointer, pointerEnd));
 
-			pointer += chunKSize;
-			pointerEnd += chunKSize;
+			pointer += chunkSize;
+			pointerEnd += chunkSize;
 		}
 
 	}

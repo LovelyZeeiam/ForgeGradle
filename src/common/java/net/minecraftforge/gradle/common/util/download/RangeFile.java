@@ -15,4 +15,13 @@ class RangeFile extends Range {
 		return file;
 	}
 
+	@Override
+	public String toString() {
+		return "RangeFile{" +
+				"from=" + getFrom() +
+				", to=" + getTo() +
+				", file=" + file +
+				'}';
+	}
+
 }
