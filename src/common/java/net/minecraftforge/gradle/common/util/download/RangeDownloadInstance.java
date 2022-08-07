@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 class RangeDownloadInstance extends DownloadInstance {
 
 	protected CopyOnWriteArrayList<RangeFile> fileList = Lists.newCopyOnWriteArrayList();
+	protected CopyOnWriteArrayList<File> toBeDeletedList = Lists.newCopyOnWriteArrayList();
 
 	RangeDownloadInstance(URL url, File output, @Nullable Map<String, String> headers, ExecutorService executor) {
 		super(url, output, headers, executor);
@@ -28,20 +29,19 @@ class RangeDownloadInstance extends DownloadInstance {
 	}
 
 	@Override
-	protected void processDownloadFail(Range range, File file, long downloadedSize, Exception e) {
+	public void processDownloadFail(Range range, File file, long downloadedSize, Exception e) {
 		long downloadEndPointer = range.getFrom() + downloadedSize - 1;
 		this.submitDownloadTask(new Range(downloadEndPointer + 1, range.getTo()));
 		if (downloadedSize > 0) {
 			fileList.add(new RangeFile(range.getFrom(), downloadEndPointer, file));
 		} else {
-			file.deleteOnExit();
+			toBeDeletedList.add(file);
 		}
 	}
 
 	@Override
-	protected void processDownloadSuccess(Range range, File file) {
+	public void processDownloadSuccess(Range range, File file) {
 		fileList.add(new RangeFile(range.getFrom(), range.getTo(), file));
-//		System.out.println(fileList);
 	}
 
 	@Override
@@ -67,12 +67,18 @@ class RangeDownloadInstance extends DownloadInstance {
 			while (in.available() > 0) {
 				int readBytes = in.read(ioBuffer);
 				randomAccessFile.write(ioBuffer, 0, readBytes);
-//				System.out.println(readBytes);
 			}
 			in.close();
-			rangeFile.getFile().deleteOnExit();
 		}
 		randomAccessFile.close();
+
+		fileList.forEach(fragment -> {
+			fragment.getFile().delete();
+		});
+		toBeDeletedList.forEach(emptyFile -> {
+			emptyFile.delete();
+		});
+
 		return true;
 	}
 

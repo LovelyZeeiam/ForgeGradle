@@ -24,13 +24,13 @@ class SingleThreadDownloadInstance extends DownloadInstance {
 	}
 
 	@Override
-	protected void processDownloadFail(Range range, File file, long downloadedSize, Exception e) {
+	public void processDownloadFail(Range range, File file, long downloadedSize, Exception e) {
 		this.submitDownloadTask(range);
 		file.delete();
 	}
 
 	@Override
-	protected void processDownloadSuccess(Range range, File file) {
+	public void processDownloadSuccess(Range range, File file) {
 	}
 
 }

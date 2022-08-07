@@ -10,7 +10,7 @@ import java.net.URLConnection;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-public abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
+public abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> implements DownloadStateListener {
 
 	protected final URL url;
 	protected final File output;
@@ -77,7 +77,6 @@ public abstract class DownloadInstance extends DeterminedListWorker<RangeConnect
 					out.write(ioBuffer, 0, read);
 					byteCount += read;
 				}
-//				System.out.println(read + ", " + byteCount + ", " + downloadSize);
 
 			}
 
@@ -96,12 +95,8 @@ public abstract class DownloadInstance extends DeterminedListWorker<RangeConnect
 
 	}
 
-	protected abstract void processDownloadFail(Range range, File file, long downloadedSize, Exception e);
-
-	protected abstract void processDownloadSuccess(Range range, File file);
-
 	public static DownloadInstance create(URL url, File output, Map<String, String> headers, ExecutorService executor) throws IOException {
-		return create(url, output, headers, 16384, executor);
+		return create(url, output, headers, Integer.MAX_VALUE, executor);
 	}
 
 	/**
@@ -167,8 +162,8 @@ public abstract class DownloadInstance extends DeterminedListWorker<RangeConnect
 
 	public static URLConnection createConnection(URL url, Map<String, String> headers) throws IOException {
 		URLConnection con = url.openConnection();
-		con.setConnectTimeout(10000);
-		con.setReadTimeout(5000);
+		con.setConnectTimeout(5000);
+		con.setReadTimeout(3000);
 
 		if (con instanceof HttpURLConnection && headers != null) {
 			headers.forEach(con::setRequestProperty);

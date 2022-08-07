@@ -31,9 +31,8 @@ public abstract class DeterminedListWorker<T> {
 		this.executor = Objects.requireNonNull(executor);
 	}
 
-	public T submit(T t) {
+	public void submit(T t) {
 		workList.add(t);
-		return t;
 	}
 
 	/**
@@ -64,8 +63,9 @@ public abstract class DeterminedListWorker<T> {
 	 */
 	protected boolean runTheWorker() {
 		while (!workList.isEmpty()) {
+			this.onTasksRestart();
+
 			ArrayList<Future<?>> futures = Lists.newArrayList();
-//			System.out.println("[Start] " + this.workList);
 
 			for (T t : workList) {
 				workList.remove(t);
@@ -87,9 +87,14 @@ public abstract class DeterminedListWorker<T> {
 				}
 			}
 
-//			System.out.println("[End] " + this.workList);
 		}
 		return true;
+	}
+
+	/**
+	 * Execute when the new run is executed
+	 */
+	protected void onTasksRestart() {
 	}
 
 	public synchronized void forEach(Consumer<T> action) {
