@@ -142,7 +142,7 @@ publishing {
         pluginMaven(MavenPublication) {
             // Automated publishing declares the java component for us
 
-//            project.changelog.publish(it)
+            project.changelog.publish(it)
         }
     }
     repositories {
