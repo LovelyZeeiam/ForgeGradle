@@ -97,7 +97,6 @@ public class DownloadUtils {
         ExecutorService executor = Executors.newWorkStealingPool();
         boolean success = true;
         try {
-            System.out.println(output + " " + url);
             DownloadInstance.create(url, output, headers, Integer.MAX_VALUE, executor).run();
         } catch (IOException e) {
             if (deleteOn404 && output.exists())
@@ -111,30 +110,6 @@ public class DownloadUtils {
             executor.shutdown();
         }
         return success;
-    }
-
-    private static boolean downloadFile(URLConnection con, File output) throws IOException {
-        try {
-            InputStream stream = con.getInputStream();
-            int len = con.getContentLength();
-            int read;
-
-            output.getParentFile().mkdirs();
-
-            try (FileOutputStream out = new FileOutputStream(output)) {
-                read = IOUtils.copy(stream, out);
-            }
-
-            if (read != len) {
-                output.delete();
-                throw new IOException("Failed to read all of data from " + con.getURL() + " got " + read + " expected " + len);
-            }
-
-            return true;
-        } catch (IOException e) {
-            output.delete();
-            throw e;
-        }
     }
 
     @Nullable
