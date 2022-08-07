@@ -19,12 +19,9 @@ class MultiThreadedDownloadInstance extends RangeDownloadInstance {
 	@Override
 	protected void init(URLConnection initialConnection) {
 		long chunkSize = this.chunkSize.getValue();
-
-		long pointer = chunkSize, pointerEnd = chunkSize * 2 - 1;
-		this.submit(new RangeConnection(0, Math.min(pointer - 1, fileSize), initialConnection));
-
-		if (pointer <= fileSize) {
-			this.submitDownloadTask(new Range(pointer, fileSize));
+		this.submit(new RangeConnection(0, Math.min(chunkSize - 1, fileSize), initialConnection));
+		if (chunkSize <= fileSize) {
+			this.submitDownloadTask(new Range(chunkSize, fileSize));
 		}
 
 	}
@@ -54,8 +51,7 @@ class MultiThreadedDownloadInstance extends RangeDownloadInstance {
 		long end = range.getTo();
 		while(start < end) {
 			long rangeEnd = start + chunkSize;
-			Range cutRange = new Range(start, Math.min(rangeEnd - 1, fileSize));
-			System.out.println(cutRange);
+			Range cutRange = new Range(start, Math.min(rangeEnd - 1, end));
 			super.submitDownloadTask(cutRange);
 			start = rangeEnd;
 		}
