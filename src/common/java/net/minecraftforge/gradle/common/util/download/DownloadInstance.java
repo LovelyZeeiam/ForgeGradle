@@ -10,7 +10,7 @@ import java.net.URLConnection;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
+public abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
 
 	protected final URL url;
 	protected final File output;
@@ -23,6 +23,7 @@ abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
 		this.url = url;
 		this.output = output;
 		this.headers = headers;
+
 	}
 
 	/**
@@ -118,6 +119,8 @@ abstract class DownloadInstance extends DeterminedListWorker<RangeConnection> {
 	 * @throws IOException throw when an exception on initializing is thrown
 	 */
 	public static DownloadInstance create(URL url, File output, Map<String, String> headers, long chunkSize, ExecutorService executor) throws IOException {
+		FileUtils.touch(output);
+
 		String proto = url.getProtocol().toLowerCase();
 		URLConnection con = createConnection(url, headers);
 

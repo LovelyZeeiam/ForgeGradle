@@ -36,13 +36,12 @@ class RangeDownloadInstance extends DownloadInstance {
 		} else {
 			file.deleteOnExit();
 		}
-		System.out.println(downloadedSize + "" + fileList);
 	}
 
 	@Override
 	protected void processDownloadSuccess(Range range, File file) {
 		fileList.add(new RangeFile(range.getFrom(), range.getTo(), file));
-		System.out.println(fileList);
+//		System.out.println(fileList);
 	}
 
 	@Override

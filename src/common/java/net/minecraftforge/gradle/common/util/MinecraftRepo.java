@@ -285,7 +285,7 @@ public class MinecraftRepo extends BaseRepo {
 
         Download dl = json.downloads.get(key);
         if (!target.exists() || !HashFunction.SHA1.hash(target).equals(dl.sha1)) {
-            FileUtils.copyURLToFile(dl.url, target);
+            DownloadUtils.downloadFile(dl.url, target, true);
             Utils.updateHash(target, HashFunction.SHA1);
         }
         return target;

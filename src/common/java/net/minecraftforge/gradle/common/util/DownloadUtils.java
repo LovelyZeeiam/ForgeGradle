@@ -21,6 +21,7 @@
 package net.minecraftforge.gradle.common.util;
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
+import net.minecraftforge.gradle.common.util.download.DownloadInstance;
 import org.apache.commons.io.IOUtils;
 import org.apache.tools.ant.taskdefs.condition.Http;
 
@@ -38,6 +39,8 @@ import java.nio.file.Files;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -97,46 +100,27 @@ public class DownloadUtils {
         return false;
     }
 
-
     public static boolean downloadFile(URL url, File output, boolean deleteOn404) {
         return downloadFile(url, output, null, deleteOn404);
     }
 
     public static boolean downloadFile(URL url, File output, @Nullable Map<String, String> headers, boolean deleteOn404) {
-        String proto = url.getProtocol().toLowerCase();
-
+        ExecutorService executor = Executors.newWorkStealingPool();
+        boolean success = true;
         try {
-            if ("http".equals(proto) || "https".equals(proto)) {
-                HttpURLConnection con = connectHttpWithRedirects(url, urlCon -> {
-                    if (headers != null) {
-                        for (Map.Entry<String, String> entry : headers.entrySet()) {
-                            urlCon.setRequestProperty(entry.getKey(), entry.getValue());
-                        }
-                    }
-                });
-                int responseCode = con.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    return downloadFile(con, output);
-                } else if (responseCode == HttpURLConnection.HTTP_NOT_FOUND && deleteOn404 && output.exists()) {
-                    output.delete();
-                }
-            } else {
-                URLConnection con = url.openConnection();
-                con.connect();
-                return downloadFile(con, output);
-            }
-        } catch (FileNotFoundException e) {
+            DownloadInstance.create(url, output, headers, 65536, executor).run();
+        } catch (IOException e) {
             if (deleteOn404 && output.exists())
                 output.delete();
-        } catch (IOException e) {
-            //Invalid URLs/File paths will cause FileNotFound or 404 errors.
-            //As well as any errors during download.
-            //So delete the output if it exists as it's invalid, and return false
+            success = false;
+        } catch (RuntimeException e) {
             if (output.exists())
                 output.delete();
+            success = false;
+        } finally {
+            executor.shutdown();
         }
-
-        return false;
+        return success;
     }
 
     private static boolean downloadFile(URLConnection con, File output) throws IOException {

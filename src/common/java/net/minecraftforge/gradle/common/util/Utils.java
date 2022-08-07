@@ -237,7 +237,7 @@ public class Utils {
                 target.getParentFile().mkdirs();
             }
 
-            FileUtils.copyURLToFile(dl.url, target);
+            DownloadUtils.downloadFile(dl.url, target, true);
         }
         return target;
     }

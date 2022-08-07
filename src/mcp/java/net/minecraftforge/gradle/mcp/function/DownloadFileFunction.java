@@ -61,10 +61,10 @@ class DownloadFileFunction implements MCPFunction {
             if (localPath.exists() && HashFunction.SHA1.hash(localPath).equalsIgnoreCase(info.hash)) {
                 FileUtils.copyFile(localPath, download);
             } else {
-                FileUtils.copyURLToFile(new URL(info.url), download);
+                DownloadUtils.downloadFile(new URL(info.url), download, true);
             }
         } else {
-            FileUtils.copyURLToFile(new URL(info.url), download);
+            DownloadUtils.downloadFile(new URL(info.url), download, true);
         }
 
         if (output != download) {

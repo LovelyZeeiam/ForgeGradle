@@ -145,7 +145,6 @@ public class PatcherPlugin implements Plugin<Project> {
         final TaskProvider<DefaultTask> showLicense = tasks.register(MojangLicenseHelper.SHOW_LICENSE, DefaultTask.class);
 
         //Add Known repos
-        System.out.println("-- Repo Register --");
         project.getRepositories().maven(e -> {
             e.setUrl(Utils.FORGE_MAVEN);
             e.metadataSources(m -> {
